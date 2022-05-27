@@ -3,6 +3,8 @@ package com.jay.restfulwebservices.web;
 import java.net.URI;
 import java.util.List;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,7 +39,7 @@ public class UserController {
 	}
 
 	@PostMapping("/users")
-	public ResponseEntity<Object> addUsers(@RequestBody User user) {
+	public ResponseEntity<Object> addUsers(@Valid @RequestBody User user) {
 		User savedUser = userService.addUser(user);
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(savedUser.getId())
 				.toUri();
