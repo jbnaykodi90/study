@@ -14,7 +14,9 @@ public class FilteringController {
 	@GetMapping("/filtering-bean")
 	public MappingJacksonValue getSomeBean() {
 		SomeBean someBean = new SomeBean("val1", "val2", "val3");
+		//Provide values which needs to be sent in response
 		SimpleBeanPropertyFilter filter = SimpleBeanPropertyFilter.filterOutAllExcept("field1", "field2");
+		//Provide filter name given with @JsonFilter annotation on model class
 		FilterProvider filters = new SimpleFilterProvider().addFilter("SomeBeanFilter", filter);
 		MappingJacksonValue mapping = new MappingJacksonValue(someBean);
 		mapping.setFilters(filters);
