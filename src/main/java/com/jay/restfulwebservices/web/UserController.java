@@ -6,6 +6,8 @@ import java.util.List;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,12 +32,16 @@ public class UserController {
 	}
 
 	@GetMapping("/users/{id}")
-	public User getUser(@PathVariable String id) {
+	public EntityModel<User> getUser(@PathVariable String id) {
 		User user = userService.getUser(Integer.parseInt(id));
-		if(user == null) {
+		if (user == null) {
 			throw new UserNotFoundException("User not found with id = " + id);
 		}
-		return user;
+		EntityModel<User> model = EntityModel.of(user);
+		model.add(
+				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass())
+						.getUsers()).withRel("all-users"));
+		return model;
 	}
 
 	@PostMapping("/users")
@@ -45,11 +51,11 @@ public class UserController {
 				.toUri();
 		return ResponseEntity.created(location).build();
 	}
-	
+
 	@DeleteMapping("/users/{id}")
 	public void deleteUser(@PathVariable String id) {
 		User user = userService.deleteUser(Integer.parseInt(id));
-		if(user == null) {
+		if (user == null) {
 			throw new UserNotFoundException("User not found with id = " + id);
 		}
 	}

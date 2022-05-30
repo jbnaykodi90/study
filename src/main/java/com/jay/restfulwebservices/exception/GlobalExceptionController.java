@@ -30,7 +30,7 @@ public class GlobalExceptionController extends ResponseEntityExceptionHandler {
 
 		return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
 	}
-
+	//To handle validation exceptions
 	@Override
 	public ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex, HttpHeaders headers,
 			HttpStatus status, WebRequest request) {
