@@ -71,4 +71,6 @@ public class UserController {
 	public String helloWorld(@RequestHeader(name = "Accept-Language", required =  false) Locale locale) {
 		return messageSource.getMessage("good.morning.message", null,"Default message",locale);
 	}
+	
+	
 }
