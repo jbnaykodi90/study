@@ -2,12 +2,11 @@ package com.jay.restfulwebservices.web;
 
 import java.net.URI;
 import java.util.List;
-import java.util.Locale;
+import java.util.Optional;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.MessageSource;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
@@ -16,11 +15,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.jay.restfulwebservices.exception.UserNotFoundException;
+import com.jay.restfulwebservices.model.Posts;
 import com.jay.restfulwebservices.model.User;
 import com.jay.restfulwebservices.service.UserService;
 
@@ -28,9 +27,6 @@ import com.jay.restfulwebservices.service.UserService;
 public class UserController {
 	@Autowired
 	private UserService userService;
-	
-	@Autowired
-	private MessageSource messageSource;
 
 	@GetMapping("/users")
 	public List<User> getUsers() {
@@ -39,14 +35,13 @@ public class UserController {
 
 	@GetMapping("/users/{id}")
 	public EntityModel<User> getUser(@PathVariable String id) {
-		User user = userService.getUser(Integer.parseInt(id));
-		if (user == null) {
+		Optional<User> user = userService.getUser(Integer.parseInt(id));
+		if (!user.isPresent()) {
 			throw new UserNotFoundException("User not found with id = " + id);
 		}
-		EntityModel<User> model = EntityModel.of(user);
+		EntityModel<User> model = EntityModel.of(user.get());
 		model.add(
-				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass())
-						.getUsers()).withRel("all-users"));
+				WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(this.getClass()).getUsers()).withRel("all-users"));
 		return model;
 	}
 
@@ -60,17 +55,30 @@ public class UserController {
 
 	@DeleteMapping("/users/{id}")
 	public void deleteUser(@PathVariable String id) {
-		User user = userService.deleteUser(Integer.parseInt(id));
-		if (user == null) {
+		userService.deleteUser(id);
+	}
+
+	@GetMapping("/users/{id}/posts")
+	public List<Posts> getPosts(@PathVariable String id) {
+		Optional<User> user = userService.getUser(Integer.parseInt(id));
+		if (!user.isPresent()) {
 			throw new UserNotFoundException("User not found with id = " + id);
 		}
+		return user.get().getPosts();
 	}
 	
-	/*Internationalization*/
-	@GetMapping("/hello-world")
-	public String helloWorld(@RequestHeader(name = "Accept-Language", required =  false) Locale locale) {
-		return messageSource.getMessage("good.morning.message", null,"Default message",locale);
+	@PostMapping("/users/{id}/posts")
+	public ResponseEntity<Object> addPost(@PathVariable String id, @RequestBody Posts post) {
+		Optional<User> user = userService.getUser(Integer.parseInt(id));
+		if (!user.isPresent()) {
+			throw new UserNotFoundException("User not found with id = " + id);
+		}
+		User savedUser = user.get();
+		
+		post.setUser(savedUser);
+		userService.addPost(post);
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/users/{id}/posts").buildAndExpand(post.getId())
+				.toUri();
+		return ResponseEntity.created(location).build();
 	}
-	
-	
 }
